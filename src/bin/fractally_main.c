@@ -18,7 +18,7 @@
 #define COPYRIGHT "Copyright © 2017 Andy Williams <andy@andywilliams.me> and various contributors (see AUTHORS)."
 
 Evas_Object *_canvas, *_fractally_win;
-float _fractally_x = 0, _fractally_y = 0;
+float _fractally_x = 0, _fractally_y = 0, _fractally_scale = 1.0;
 Evas_Coord _mouse_x, _mouse_y;
 Eina_Bool _mouse_down;
 
@@ -67,8 +67,8 @@ _fractally_mouse_up(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *ob
    _mouse_down = EINA_FALSE;
    evas_object_geometry_get(obj, NULL, NULL, &ww, &wh);
 
-   deltax = (float)(_mouse_x - event->canvas.x) / ww;
-   deltay = (float)(_mouse_y - event->canvas.y) / (wh * 1.5);
+   deltax = (float)(_mouse_x - event->canvas.x) / ww * _fractally_scale;
+   deltay = (float)(_mouse_y - event->canvas.y) / (wh * 1.5) * _fractally_scale;
 
    _fractally_x += deltax;
    _fractally_y += deltay;
@@ -118,6 +118,10 @@ _fractally_key_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *ob
      _fractally_y += .12;
    else if (!strcmp(ev->key, "Down"))
      _fractally_y -= .12;
+   else if (!strcmp(ev->key, "plus"))
+     _fractally_scale *= .8;
+   else if (!strcmp(ev->key, "minus"))
+     _fractally_scale *= 1.25;
 
    fractally_render_refresh(obj);
 }

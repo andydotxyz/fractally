@@ -9,8 +9,6 @@
 
 #include "fractally_private.h"
 
-#define MAX_ITERATIONS 50
-
 Evas_Object *_fractally_img;
 
 Evas_Object *
@@ -51,6 +49,7 @@ _color_cell_at(float px, float py, unsigned int *pixel)
 {
    double c_re = px * 4;
    double c_im = py * 4;
+   int MAX_ITERATIONS = 50 / (sqrt(sqrt(_fractally_scale)));
 
    int i;
    double x = 0, y = 0, xsq = 0, ysq = 0;
@@ -92,8 +91,8 @@ fractally_render_refresh(Evas_Object *content)
    for (y = 0; y < wh; y++)
      for (x = 0; x < ww; x++)
        {
-          _color_cell_at(((float)x / ww) - .625 + _fractally_x,
-                          (((float)y / wh) - .5) / 1.5 + _fractally_y, pixel);
+          _color_cell_at((((float)x / ww) - .625) * _fractally_scale + _fractally_x,
+                          ((((float)y / wh) - .5) / 1.5) * _fractally_scale + _fractally_y, pixel);
 
           pixel++;
        }
