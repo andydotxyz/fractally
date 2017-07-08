@@ -1,4 +1,4 @@
-Fraactally - An EFL based fractal viewer
+Fractally - An EFL based fractal viewer
 ===
 
 A quick project I threw together to see how performant the EFL would be
