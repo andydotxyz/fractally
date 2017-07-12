@@ -131,7 +131,7 @@ fractally_win_setup(void)
 {
    Evas_Object *win, *content;
 
-   win = elm_win_util_standard_add("main", "Factally");
+   win = elm_win_util_standard_add("main", "Fractally");
    if (!win) return NULL;
 
    _fractally_win = win;
