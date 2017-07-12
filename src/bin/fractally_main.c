@@ -21,6 +21,8 @@ Evas_Object *_canvas, *_fractally_win;
 double _fractally_x = -0.15, _fractally_y = 0.0, _fractally_scale = 1.0;
 Evas_Coord _mouse_x, _mouse_y;
 Eina_Bool _mouse_down;
+double _mouse_wheel_x = 0.0, _mouse_wheel_y = 0.0, _mouse_wheel_scale = 1.0;
+Ecore_Timer *_mouse_wheel_timer;
 
 static void
 _fractally_win_del(void *data EINA_UNUSED, Evas_Object *obj EINA_UNUSED, void *event_info EINA_UNUSED)
@@ -89,8 +91,12 @@ _fractally_mouse_move(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *
    event = (Evas_Event_Mouse_Move *)event_info;
 
    if (!_mouse_down)
-     return;
+     {
+        _mouse_x = event->cur.canvas.x;
+        _mouse_y = event->cur.canvas.y;
 
+        return;
+     }
    evas_object_geometry_get(_fractally_win, NULL, NULL, &ww, &wh);
    deltax = _mouse_x - event->cur.canvas.x;
    deltay = _mouse_y - event->cur.canvas.y;
@@ -100,6 +106,78 @@ _fractally_mouse_move(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *
    evas_object_map_set(_canvas, m);
    evas_object_map_enable_set(_canvas, EINA_TRUE);
    evas_map_free(m);
+}
+
+static Eina_Bool
+_fractally_mouse_wheel_done(void *data)
+{
+   Evas_Coord ww, wh;
+   Evas_Object *obj;
+
+   obj = (Evas_Object *)data;
+   evas_object_geometry_get(_fractally_win, NULL, NULL, &ww, &wh);
+
+   evas_object_map_enable_set(_canvas, EINA_FALSE);
+   fractally_render_refresh(obj);
+
+   ecore_timer_del(_mouse_wheel_timer);
+   _mouse_wheel_timer = NULL;
+   _mouse_wheel_x = _mouse_wheel_y = 0.0;
+   _mouse_wheel_scale = 1.0;
+
+   return ECORE_CALLBACK_CANCEL;
+}
+
+static void
+_fractally_mouse_wheel(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *obj EINA_UNUSED,
+                       void *event_info)
+{
+   Evas_Event_Mouse_Wheel *event;
+   Evas_Map *m = evas_map_new(4);
+   Evas_Coord ww, wh;
+
+   event = (Evas_Event_Mouse_Wheel *)event_info;
+
+   if (_mouse_down)
+     return;
+
+   evas_object_geometry_get(_fractally_win, NULL, NULL, &ww, &wh);
+
+   /* Update realtime render */
+   double change;
+   if (event->z == 0)
+     return;
+   if (event->z > 0)
+     change = sqrt(1.25);
+   else
+     change = sqrt(0.8);
+   _mouse_wheel_scale *= change;
+
+   evas_map_util_points_populate_from_geometry(m, 0, 0, ww, wh, 0);
+   evas_map_util_zoom(m, 1/_mouse_wheel_scale, 1/_mouse_wheel_scale, _mouse_x, _mouse_y);
+
+   evas_object_map_set(_canvas, m);
+   evas_object_map_enable_set(_canvas, EINA_TRUE);
+   evas_map_free(m);
+
+   /* calculate the real coordinates of our scale */
+   double xpos = ((double)(_mouse_x - ww/2) / (ww));
+   double ypos = ((double)(_mouse_y - wh/2) / (wh * 1.5));
+
+   if (_mouse_wheel_scale != 1.0)
+     {
+        _mouse_wheel_x = _fractally_x + xpos * _fractally_scale;
+        _mouse_wheel_y = _fractally_y + ypos * _fractally_scale;
+     }
+
+   _fractally_scale *= change;
+   _fractally_x = _mouse_wheel_x - xpos * _fractally_scale;
+   _fractally_y = _mouse_wheel_y - ypos * _fractally_scale;
+
+   if (_mouse_wheel_timer)
+     ecore_timer_reset(_mouse_wheel_timer);
+   else
+     _mouse_wheel_timer = ecore_timer_add(1, _fractally_mouse_wheel_done, obj);
 }
 
 static void
@@ -144,6 +222,7 @@ fractally_win_setup(void)
    evas_object_event_callback_add(win, EVAS_CALLBACK_MOUSE_DOWN, _fractally_mouse_down, NULL);
    evas_object_event_callback_add(win, EVAS_CALLBACK_MOUSE_UP, _fractally_mouse_up, NULL);
    evas_object_event_callback_add(win, EVAS_CALLBACK_MOUSE_MOVE, _fractally_mouse_move, NULL);
+   evas_object_event_callback_add(win, EVAS_CALLBACK_MOUSE_WHEEL, _fractally_mouse_wheel, NULL);
    evas_object_event_callback_add(win, EVAS_CALLBACK_KEY_DOWN, _fractally_key_down, NULL);
 
    content = evas_object_rectangle_add(win);
