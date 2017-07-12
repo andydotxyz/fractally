@@ -63,7 +63,7 @@ _fractally_mouse_up(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *ob
 
    event = (Evas_Event_Mouse_Up *) event_info;
 
-   if (event->button != 1)
+   if (event->button != 1 || !_mouse_down)
      return;
 
    _mouse_down = EINA_FALSE;
@@ -204,10 +204,44 @@ _fractally_key_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *ob
    fractally_render_refresh(obj);
 }
 
+static Evas_Event_Flags
+_fractally_gesture_zoom_move(void *data EINA_UNUSED, void *event_info)
+{
+   Elm_Gesture_Zoom_Info *info = (Elm_Gesture_Zoom_Info *) event_info;
+   Evas_Map *m = evas_map_new(4);
+   Evas_Coord ww, wh;
+
+   // for now simply cancel any move
+   _mouse_down = EINA_FALSE;
+
+   evas_object_geometry_get(_fractally_win, NULL, NULL, &ww, &wh);
+
+   evas_map_util_points_populate_from_geometry(m, 0, 0, ww, wh, 0);
+   evas_map_util_zoom(m, info->zoom, info->zoom, info->x, info->y);
+
+   evas_object_map_set(_canvas, m);
+   evas_object_map_enable_set(_canvas, EINA_TRUE);
+   evas_map_free(m);
+
+   return EVAS_EVENT_FLAG_NONE;
+}
+
+static Evas_Event_Flags
+_fractally_gesture_zoom_end(void *data EINA_UNUSED, void *event_info)
+{
+   Elm_Gesture_Zoom_Info *info = (Elm_Gesture_Zoom_Info *) event_info;
+
+   _fractally_scale *= 1 / info->zoom;
+   evas_object_map_enable_set(_canvas, EINA_FALSE);
+   fractally_render_refresh(_canvas);
+
+   return EVAS_EVENT_FLAG_NONE;
+}
+
 static Evas_Object *
 fractally_win_setup(void)
 {
-   Evas_Object *win, *content;
+   Evas_Object *win, *content, *gl;
 
    win = elm_win_util_standard_add("main", "Fractally");
    if (!win) return NULL;
@@ -225,11 +259,17 @@ fractally_win_setup(void)
    evas_object_event_callback_add(win, EVAS_CALLBACK_MOUSE_WHEEL, _fractally_mouse_wheel, NULL);
    evas_object_event_callback_add(win, EVAS_CALLBACK_KEY_DOWN, _fractally_key_down, NULL);
 
+   gl = elm_gesture_layer_add(win);
+   elm_gesture_layer_hold_events_set(gl, EINA_TRUE);
+   elm_gesture_layer_cb_set(gl, ELM_GESTURE_ZOOM, ELM_GESTURE_STATE_MOVE, _fractally_gesture_zoom_move, NULL);
+   elm_gesture_layer_cb_set(gl, ELM_GESTURE_ZOOM, ELM_GESTURE_STATE_END, _fractally_gesture_zoom_end, NULL);
+
    content = evas_object_rectangle_add(win);
    elm_win_resize_object_add(win, content);
    evas_object_show(content);
 
    _canvas = fractally_render_init(content);
+   elm_gesture_layer_attach(gl, _canvas);
    evas_object_show(win);
 
    return win;
