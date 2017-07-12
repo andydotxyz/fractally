@@ -45,7 +45,7 @@ fractally_render_layout(Evas_Object *content)
 }
 
 static void
-_color_cell_at(float px, float py, unsigned int *pixel)
+_color_cell_at(double px, double py, unsigned int *pixel)
 {
    double c_re = px * 4;
    double c_im = py * 4;
@@ -91,8 +91,8 @@ fractally_render_refresh(Evas_Object *content)
    for (y = 0; y < wh; y++)
      for (x = 0; x < ww; x++)
        {
-          _color_cell_at((((float)x / ww) - .625) * _fractally_scale + _fractally_x,
-                          ((((float)y / wh) - .5) / 1.5) * _fractally_scale + _fractally_y, pixel);
+          _color_cell_at((((double)x / ww) - .5) * _fractally_scale + _fractally_x,
+                          ((((double)y / wh) - .5) / 1.5) * _fractally_scale + _fractally_y, pixel);
 
           pixel++;
        }

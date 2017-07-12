@@ -3,7 +3,7 @@
 
 #include <Evas.h>
 
-extern float _fractally_x, _fractally_y, _fractally_scale;
+extern double _fractally_x, _fractally_y, _fractally_scale;
 extern Evas_Object *_fractally_win;
 
 Evas_Object *fractally_render_init(Evas_Object *win);

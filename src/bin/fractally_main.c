@@ -18,7 +18,7 @@
 #define COPYRIGHT "Copyright © 2017 Andy Williams <andy@andywilliams.me> and various contributors (see AUTHORS)."
 
 Evas_Object *_canvas, *_fractally_win;
-float _fractally_x = 0, _fractally_y = 0, _fractally_scale = 1.0;
+double _fractally_x = -0.15, _fractally_y = 0.0, _fractally_scale = 1.0;
 Evas_Coord _mouse_x, _mouse_y;
 Eina_Bool _mouse_down;
 
