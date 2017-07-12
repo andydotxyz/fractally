@@ -111,13 +111,13 @@ _fractally_key_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *ob
    ev = event_info;
 
    if (!strcmp(ev->key, "Left"))
-     _fractally_x += .18;
+     _fractally_x += .18  * _fractally_scale;
    else if (!strcmp(ev->key, "Right"))
-     _fractally_x -= .18;
+     _fractally_x -= .18 * _fractally_scale;
    else if (!strcmp(ev->key, "Up"))
-     _fractally_y += .12;
+     _fractally_y += .12 * _fractally_scale;
    else if (!strcmp(ev->key, "Down"))
-     _fractally_y -= .12;
+     _fractally_y -= .12 * _fractally_scale;
    else if (!strcmp(ev->key, "plus"))
      _fractally_scale *= .8;
    else if (!strcmp(ev->key, "minus"))
